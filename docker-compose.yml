@@ -1,6 +1,6 @@
 services:
   playlist-proxy:
-    build: .
+    image: sanil/playlist-proxy:latest
     container_name: playlist-proxy
     ports:
       - "8099:3000"

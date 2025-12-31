@@ -1,0 +1,6 @@
+# Local development override - automatically merged with docker-compose.yml
+# To use published image only: docker compose -f docker-compose.yml up
+services:
+    playlist-proxy:
+        build: .
+        image: playlist-proxy:local
