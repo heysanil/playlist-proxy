@@ -1,5 +1,11 @@
 # playlist-proxy
 
+## 1.0.1
+
+### Patch Changes
+
+- 5515dc6: Add ARM64 (Apple Silicon) support to Docker images
+
 ## 1.0.0
 
 ### Major Changes
