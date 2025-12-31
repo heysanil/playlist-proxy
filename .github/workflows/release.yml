@@ -1,0 +1,55 @@
+name: Release
+
+on:
+    push:
+        branches:
+            - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+    release:
+        name: Release
+        runs-on:
+            - nscloud-ubuntu-22.04-amd64-4x8
+
+        permissions:
+            contents: write
+            pull-requests: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Create Release Pull Request or Tag
+              id: changesets
+              uses: changesets/action@v1
+              with:
+                  commit: "chore: release"
+                  title: "chore: release"
+                  version: bun run version
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Create and push tag
+              if: steps.changesets.outputs.hasChangesets == 'false'
+              run: |
+                  VERSION=$(jq -r '.version' package.json)
+                  if [ "$VERSION" != "0.0.0" ]; then
+                      TAG="v$VERSION"
+                      if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+                          git tag "$TAG"
+                          git push origin "$TAG"
+                          echo "Created and pushed tag: $TAG"
+                      else
+                          echo "Tag $TAG already exists"
+                      fi
+                  fi
