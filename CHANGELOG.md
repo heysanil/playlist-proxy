@@ -1,5 +1,15 @@
 # playlist-proxy
 
+## 1.1.1
+
+### Patch Changes
+
+- 19489dd: Fix logo/icon URL proxying to use the same proxy path as streams
+
+  - Logo URLs in M3U (tvg-logo, etc.) are now proxied via `/stream/` when proxy mode is enabled
+  - EPG icon URLs (src attributes) are now proxied via `/stream/` when proxy mode is enabled
+  - URLs are left unchanged when proxy mode is disabled
+
 ## 1.1.0
 
 ### Minor Changes
