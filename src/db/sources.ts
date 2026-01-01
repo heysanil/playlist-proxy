@@ -8,6 +8,7 @@ export interface DbSource {
     epg_url: string | null;
     channel_renumber_type: string;
     channel_renumber_value: number | null;
+    sync_channel_ids: number;
     created_at: string;
     updated_at: string;
 }
@@ -18,6 +19,7 @@ export interface CreateSourceInput {
     epgUrl?: string;
     channelRenumberType?: "none" | "starting-index" | "addition";
     channelRenumberValue?: number;
+    syncChannelIds?: boolean;
 }
 
 export interface UpdateSourceInput {
@@ -26,6 +28,7 @@ export interface UpdateSourceInput {
     epgUrl?: string | null;
     channelRenumberType?: "none" | "starting-index" | "addition";
     channelRenumberValue?: number | null;
+    syncChannelIds?: boolean;
 }
 
 export function getAllSources(): DbSource[] {
@@ -46,14 +49,15 @@ export function getSourceByName(name: string): DbSource | null {
 export function createSource(input: CreateSourceInput): DbSource {
     const db = getDb();
     const result = db.run(
-        `INSERT INTO sources (name, m3u_url, epg_url, channel_renumber_type, channel_renumber_value)
-     VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO sources (name, m3u_url, epg_url, channel_renumber_type, channel_renumber_value, sync_channel_ids)
+     VALUES (?, ?, ?, ?, ?, ?)`,
         [
             input.name,
             input.m3uUrl,
             input.epgUrl || null,
             input.channelRenumberType || "none",
             input.channelRenumberValue ?? null,
+            input.syncChannelIds ? 1 : 0,
         ]
     );
 
@@ -87,6 +91,10 @@ export function updateSource(id: number, input: UpdateSourceInput): DbSource | n
     if (input.channelRenumberValue !== undefined) {
         updates.push("channel_renumber_value = ?");
         values.push(input.channelRenumberValue);
+    }
+    if (input.syncChannelIds !== undefined) {
+        updates.push("sync_channel_ids = ?");
+        values.push(input.syncChannelIds ? 1 : 0);
     }
 
     if (updates.length === 0) return existing;
@@ -126,6 +134,7 @@ export function dbSourceToConfig(source: DbSource): SourceConfig {
         m3uUrl: source.m3u_url,
         epgUrl: source.epg_url || undefined,
         channelRenumber,
+        syncChannelIds: source.sync_channel_ids === 1,
     };
 }
 

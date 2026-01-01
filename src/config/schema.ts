@@ -12,6 +12,8 @@ export interface SourceConfig {
     epgUrl?: string;
     /** Per-source channel renumbering (overrides global if set) */
     channelRenumber?: ChannelRenumberMode;
+    /** Force channel-id and tvg-id to match the updated tvg-chno value */
+    syncChannelIds?: boolean;
 }
 
 export interface ProxyConfig {

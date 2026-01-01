@@ -102,14 +102,26 @@ export function rewriteM3U(
             // Calculate new channel number
             const newChno = calculateNewChannelNumber(renumberMode, currentChno, channelIndex);
 
-            // Store mapping for EPG sync
-            if (tvgId && newChno) {
-                channelMappings.set(tvgId, newChno);
+            // Store mapping for EPG sync (map both tvg-id and tvg-chno to handle different EPG formats)
+            if (newChno) {
+                if (tvgId) {
+                    channelMappings.set(tvgId, newChno);
+                }
+                // Also map by original channel number in case EPG uses chno as channel id
+                if (currentChno && currentChno !== tvgId) {
+                    channelMappings.set(currentChno, newChno);
+                }
             }
 
             // Update tvg-chno if we have a new value
             if (newChno && renumberMode.type !== "none") {
                 line = setAttribute(line, "tvg-chno", newChno);
+
+                // Optionally sync channel-id and tvg-id to match the new chno
+                if (source.syncChannelIds) {
+                    line = setAttribute(line, "tvg-id", newChno);
+                    line = setAttribute(line, "channel-id", newChno);
+                }
             }
 
             // Rewrite URLs in the line (logos, etc.)

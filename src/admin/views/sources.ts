@@ -33,7 +33,7 @@ export function sourcesPage(sources: DbSource[], baseUrl: string): string {
           </div>
           <div class="form-group">
             <label for="channel_renumber_type">Channel Renumbering</label>
-            <select id="channel_renumber_type" name="channel_renumber_type" onchange="document.getElementById('renumber-value').style.display = this.value === 'none' ? 'none' : 'block'">
+            <select id="channel_renumber_type" name="channel_renumber_type" onchange="var isEnabled = this.value !== 'none'; document.getElementById('renumber-value').style.display = isEnabled ? 'block' : 'none'; document.getElementById('sync-ids-option').style.display = isEnabled ? 'block' : 'none';">
               <option value="none">None</option>
               <option value="starting-index">Starting Index</option>
               <option value="addition">Addition</option>
@@ -43,6 +43,13 @@ export function sourcesPage(sources: DbSource[], baseUrl: string): string {
         <div id="renumber-value" class="form-group" style="display: none;">
           <label for="channel_renumber_value">Renumber Value</label>
           <input type="number" id="channel_renumber_value" name="channel_renumber_value" placeholder="100">
+        </div>
+        <div id="sync-ids-option" class="form-group" style="display: none;">
+          <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" name="sync_channel_ids" value="1" style="width: auto;">
+            Sync channel-id and tvg-id with chno
+          </label>
+          <small style="display: block; color: var(--text-muted); margin-top: 0.25rem;">Forces channel-id and tvg-id to match the updated tvg-chno value</small>
         </div>
         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
           <button type="submit" class="btn btn-primary btn-sm">Add Source</button>
@@ -81,6 +88,9 @@ export function sourceItem(source: DbSource, baseUrl: string): string {
         renumberBadge = `<span class="badge">Start: ${source.channel_renumber_value}</span>`;
     } else if (source.channel_renumber_type === "addition") {
         renumberBadge = `<span class="badge">+${source.channel_renumber_value}</span>`;
+    }
+    if (source.sync_channel_ids && source.channel_renumber_type !== "none") {
+        renumberBadge += ` <span class="badge" style="background: var(--accent);">Sync IDs</span>`;
     }
 
     return `
@@ -138,7 +148,7 @@ export function sourceEditForm(source: DbSource, baseUrl: string): string {
           </div>
           <div class="form-group">
             <label>Channel Renumbering</label>
-            <select name="channel_renumber_type" onchange="this.closest('form').querySelector('#edit-renumber-value').style.display = this.value === 'none' ? 'none' : 'block'">
+            <select name="channel_renumber_type" onchange="var isEnabled = this.value !== 'none'; this.closest('form').querySelector('#edit-renumber-value').style.display = isEnabled ? 'block' : 'none'; this.closest('form').querySelector('#edit-sync-ids-option').style.display = isEnabled ? 'block' : 'none';">
               <option value="none" ${source.channel_renumber_type === "none" ? "selected" : ""}>None</option>
               <option value="starting-index" ${source.channel_renumber_type === "starting-index" ? "selected" : ""}>Starting Index</option>
               <option value="addition" ${source.channel_renumber_type === "addition" ? "selected" : ""}>Addition</option>
@@ -148,6 +158,13 @@ export function sourceEditForm(source: DbSource, baseUrl: string): string {
         <div id="edit-renumber-value" class="form-group" style="display: ${source.channel_renumber_type === "none" ? "none" : "block"}; margin-bottom: 1rem;">
           <label>Renumber Value</label>
           <input type="number" name="channel_renumber_value" value="${source.channel_renumber_value || ""}">
+        </div>
+        <div id="edit-sync-ids-option" class="form-group" style="display: ${source.channel_renumber_type === "none" ? "none" : "block"}; margin-bottom: 1rem;">
+          <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" name="sync_channel_ids" value="1" style="width: auto;" ${source.sync_channel_ids ? "checked" : ""}>
+            Sync channel-id and tvg-id with chno
+          </label>
+          <small style="display: block; color: var(--text-muted); margin-top: 0.25rem;">Forces channel-id and tvg-id to match the updated tvg-chno value</small>
         </div>
         <div style="display: flex; gap: 0.5rem;">
           <button type="submit" class="btn btn-primary btn-sm">Save</button>
