@@ -46,16 +46,18 @@ function rewriteStreamUrl(url: string, proxyStreams: boolean, proxyBaseUrl: stri
 }
 
 /**
- * Rewrite URLs found in attribute values within a line
+ * Rewrite URLs found in attribute values within a line (logos, etc.)
  */
-function rewriteUrlsInLine(line: string, targetHost: string, protocol: string): string {
+function rewriteUrlsInLine(line: string, proxyStreams: boolean, proxyBaseUrl: string): string {
     // Match URLs in attribute values like tvg-logo="http://..."
     return line.replace(/="(https?:\/\/[^"]+)"/gi, (match, url) => {
+        if (!proxyStreams) {
+            // Leave URLs unchanged when not proxying
+            return match;
+        }
         try {
-            const parsed = new URL(url);
-            parsed.host = targetHost;
-            parsed.protocol = `${protocol}:`;
-            return `="${parsed.toString()}"`;
+            // Proxy through our server
+            return `="${proxyBaseUrl}/stream/${encodeURIComponent(url)}"`;
         } catch {
             return match;
         }
@@ -80,12 +82,10 @@ export function rewriteM3U(
     const result: string[] = [];
     const channelMappings = new Map<string, string>();
 
-    const targetHost = config.hostname || requestHostname;
-    const protocol = config.protocol;
     // Don't append port if using request hostname (it already includes the port)
     const proxyBaseUrl = config.hostname
-        ? `${protocol}://${config.hostname}:${config.port}`
-        : `${protocol}://${requestHostname}`;
+        ? `${config.protocol}://${config.hostname}:${config.port}`
+        : `${config.protocol}://${requestHostname}`;
     const renumberMode = source.channelRenumber || config.channelRenumber;
 
     let channelIndex = 0;
@@ -124,8 +124,8 @@ export function rewriteM3U(
                 }
             }
 
-            // Rewrite URLs in the line (logos, etc.)
-            line = rewriteUrlsInLine(line, targetHost, protocol);
+            // Rewrite URLs in the line (logos, etc.) - proxy when enabled
+            line = rewriteUrlsInLine(line, config.proxyStreams, proxyBaseUrl);
 
             result.push(line);
             channelIndex++;

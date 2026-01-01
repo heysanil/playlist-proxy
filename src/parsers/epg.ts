@@ -11,21 +11,23 @@ export function rewriteEPG(
 ): string {
     const targetHost = config.hostname || requestHostname;
     const protocol = config.protocol;
-    const proxyBaseUrl = `${protocol}://${targetHost}:${config.port}`;
+    // Don't append port if using request hostname (it already includes the port)
+    const proxyBaseUrl = config.hostname
+        ? `${protocol}://${config.hostname}:${config.port}`
+        : `${protocol}://${requestHostname}`;
 
     let result = content;
 
-    // Rewrite icon/logo URLs in src attributes
-    result = result.replace(/src="(https?:\/\/[^"]+)"/gi, (match, url) => {
-        try {
-            const parsed = new URL(url);
-            parsed.host = targetHost;
-            parsed.protocol = `${protocol}:`;
-            return `src="${parsed.toString()}"`;
-        } catch {
-            return match;
-        }
-    });
+    // Rewrite icon/logo URLs in src attributes - proxy when enabled
+    if (config.proxyStreams) {
+        result = result.replace(/src="(https?:\/\/[^"]+)"/gi, (match, url) => {
+            try {
+                return `src="${proxyBaseUrl}/stream/${encodeURIComponent(url)}"`;
+            } catch {
+                return match;
+            }
+        });
+    }
 
     // Sync channel IDs if we have mappings
     if (channelMappings.size > 0) {
