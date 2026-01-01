@@ -48,6 +48,19 @@ export function rewriteEPG(
             }
             return match;
         });
+
+        // Update <lcn> tags within channel blocks for remapped channels
+        // <channel id="100">...<lcn>1.1</lcn> -> <channel id="100">...<lcn>100</lcn>
+        const remappedIds = new Set(channelMappings.values());
+        result = result.replace(
+            /<channel\s+id="([^"]+)"([^>]*)>([\s\S]*?)<lcn>[^<]*<\/lcn>/gi,
+            (match, channelId, attrs, content) => {
+                if (remappedIds.has(channelId)) {
+                    return `<channel id="${channelId}"${attrs}>${content}<lcn>${channelId}</lcn>`;
+                }
+                return match;
+            }
+        );
     }
 
     return result;

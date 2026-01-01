@@ -100,6 +100,7 @@ export async function handleAdmin(req: Request): Promise<Response> {
                 channelRenumberValue: formData.get("channel_renumber_value")
                     ? Number.parseFloat(formData.get("channel_renumber_value") as string)
                     : undefined,
+                syncChannelIds: formData.get("sync_channel_ids") === "1",
             });
 
             const sources = getAllSources();
@@ -146,6 +147,7 @@ export async function handleAdmin(req: Request): Promise<Response> {
             channelRenumberValue: formData.get("channel_renumber_value")
                 ? Number.parseFloat(formData.get("channel_renumber_value") as string)
                 : null,
+            syncChannelIds: formData.get("sync_channel_ids") === "1",
         });
 
         if (!updated) {

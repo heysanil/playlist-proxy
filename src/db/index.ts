@@ -66,6 +66,13 @@ function runMigrations(db: Database) {
         );
       `,
         },
+        {
+            id: 3,
+            name: "add_sync_channel_ids",
+            sql: `
+        ALTER TABLE sources ADD COLUMN sync_channel_ids INTEGER DEFAULT 0;
+      `,
+        },
     ];
 
     const appliedMigrations = db
